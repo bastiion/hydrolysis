@@ -17,6 +17,7 @@ import * as astValue from './ast-value';
 import {declarationPropertyHandlers, PropertyHandlers} from './declaration-property-handlers';
 import {ElementDescriptor, PropertyDescriptor} from './descriptors';
 import {Visitor} from './fluent-traverse';
+import * as docs from './docs';
 import * as estree from 'estree';
 
 export function elementFinder() {
@@ -51,6 +52,7 @@ export function elementFinder() {
     },
 
     leaveClassDeclaration: function leaveClassDeclaration(node, parent) {
+      element.properties.map(property => docs.annotate(property));
       if (element) {
         elements.push(element);
         element = null;
@@ -60,21 +62,47 @@ export function elementFinder() {
 
     enterAssignmentExpression: function enterAssignmentExpression(node, parent) {
       const left = <estree.MemberExpression>node.left;
-      if (left.object.type !== 'ThisExpression') {
+
+      if (left && left.object && left.object.type !== 'ThisExpression') {
         return;
       }
       const prop = <estree.Identifier>left.property;
-      var name = prop.name;
-      if (name in propertyHandlers) {
-        propertyHandlers[name](node.right);
+      if (prop && prop.name) {
+        var name = prop.name;
+        if (name in propertyHandlers) {
+          propertyHandlers[name](node.right);
+        }
       }
     },
 
-    // FIXME
-    // enterMethodDefinition: function enterMethodDefinition(node, parent) {
-    //   const val = <estree.FunctionExpression>node.value;
-    //   element.properties.push(esutil.toPropertyDescriptor(val));
-    // },
+    enterMethodDefinition: function enterMethodDefinition(node, parent) {
+      var prop = <estree.Property>{
+        key: node.key,
+        value: node.value,
+        kind: node.kind,
+        method: true,
+        leadingComments: node.leadingComments,
+        shorthand: false,
+        computed: false,
+        type: 'Property'
+      };
+      const propDesc = <PropertyDescriptor>docs.annotate(esutil.toPropertyDescriptor(prop));
+      if (prop && prop.kind === 'get' && (propDesc.name === 'behaviors' || propDesc.name === 'observers')) {
+        var returnStatement = <estree.ReturnStatement>node.value.body.body[0];
+        var argument = <estree.ArrayExpression>returnStatement.argument;
+        if (propDesc.name === 'behaviors') {
+          argument.elements.forEach((elementObject: estree.Identifier) => {
+            element.behaviors.push(elementObject.name);
+          });
+        } else {
+          argument.elements.forEach((elementObject: estree.Literal) => {
+            element.observers.push({javascriptNode: elementObject, expression: elementObject.raw});
+          });
+        }
+      } else {
+        element.properties.push(propDesc);
+      }
+    },
 
     enterCallExpression: function enterCallExpression(node, parent) {
 
