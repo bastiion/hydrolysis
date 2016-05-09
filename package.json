@@ -38,7 +38,7 @@
     "jsdoc-to-markdown": "^1.0.3",
     "mocha": "^2.2.4",
     "typescript": "^1.8.0",
-    "typings": "^0.6.3",
+    "typings": "^0.8.1",
     "watch": "latest",
     "web-component-tester": "^4.2.2"
   },
