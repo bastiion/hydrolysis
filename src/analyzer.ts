@@ -367,7 +367,7 @@ export class Analyzer {
     scripts.forEach((script) => {
       scriptPromises.push(this._processScript(script, href));
     });
-    return Promise.all(scriptPromises).then(function(metadataList) {
+    return Promise.all(scriptPromises).then(function(metadataList:any[]) {
       return metadataList.reduce(reduceMetadata, EMPTY_METADATA);
     });
   };
@@ -562,7 +562,7 @@ export class Analyzer {
       }
       depMetadata.push(metadataPromise);
     }
-    return Promise.all(depMetadata).then(function(importMetadata) {
+    return Promise.all(depMetadata).then(function(importMetadata:any[]) {
       metadata.imports = importMetadata;
       return htmlMonomer.htmlLoaded.then(function(parsedHtml) {
         metadata.html = parsedHtml;
