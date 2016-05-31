@@ -69,7 +69,7 @@ export function elementFinder() {
       const prop = <estree.Identifier>left.property;
       if (prop && prop.name) {
         var name = prop.name;
-        if (name in propertyHandlers) {
+        if (propertyHandlers !== null && name in propertyHandlers) {
           propertyHandlers[name](node.right);
         }
       }
@@ -90,14 +90,18 @@ export function elementFinder() {
       if (prop && prop.kind === 'get' && (propDesc.name === 'behaviors' || propDesc.name === 'observers')) {
         var returnStatement = <estree.ReturnStatement>node.value.body.body[0];
         var argument = <estree.ArrayExpression>returnStatement.argument;
-        if (propDesc.name === 'behaviors') {
-          argument.elements.forEach((elementObject: estree.Identifier) => {
-            element.behaviors.push(elementObject.name);
-          });
+        if(typeof argument !== 'undefined') {
+          if (propDesc.name === 'behaviors') {
+            argument.elements.forEach((elementObject:estree.Identifier) => {
+              element.behaviors.push(elementObject.name);
+            });
+          } else {
+            argument.elements.forEach((elementObject:estree.Literal) => {
+              element.observers.push({javascriptNode: elementObject, expression: elementObject.raw});
+            });
+          }
         } else {
-          argument.elements.forEach((elementObject: estree.Literal) => {
-            element.observers.push({javascriptNode: elementObject, expression: elementObject.raw});
-          });
+          element.properties.push(propDesc);
         }
       } else {
         element.properties.push(propDesc);
