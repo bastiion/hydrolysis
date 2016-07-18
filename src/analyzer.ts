@@ -686,6 +686,8 @@ export class Analyzer {
     }
     var behaviorsByName = this.behaviorsByName;
     var elementHelper = (descriptor: ElementDescriptor) => {
+      if(!descriptor.is)
+        return;
       docs.annotateElement(descriptor, behaviorsByName);
     };
     this.elements.forEach(elementHelper);
