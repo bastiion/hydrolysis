@@ -95,6 +95,8 @@ export function elementFinder() {
       const propDesc = <PropertyDescriptor>docs.annotate(esutil.toPropertyDescriptor(prop));
       if (prop && prop.kind === 'get' && (propDesc.name === 'behaviors' || propDesc.name === 'observers')) {
         var returnStatement = <estree.ReturnStatement>node.value.body.body[0];
+        if(returnStatement.type != 'ReturnStatement') 
+          return;
         var argument = <estree.ArrayExpression>returnStatement.argument;
         if (propDesc.name === 'behaviors') {
           argument.elements.forEach((elementObject: estree.Identifier) => {
